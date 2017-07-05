@@ -1,0 +1,38 @@
+{
+  "name": "carflow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server_data_process.js",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "body-parser-xml": "^1.1.0",
+    "cookie-parser": "^1.4.3",
+    "easyxml": "^2.0.1",
+    "express": "^4.15.3",
+    "express-session": "^1.15.3",
+    "express-xml-bodyparser": "^0.3.0",
+    "js2xmlparser": "^3.0.0",
+    "json2xml": "^0.1.3",
+    "jsontoxml": "0.0.11",
+    "moment": "^2.18.1",
+    "mongoose": "^4.10.7",
+    "morgan": "^1.8.2",
+    "object-to-xml": "^1.1.0",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^4.0.0",
+    "path": "^0.12.7",
+    "serve-favicon": "^2.4.3",
+    "xml": "^1.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "C:\\\\git_Repos\\\\CarFlow"
+  },
+  "author": "",
+  "license": "ISC"
+}
