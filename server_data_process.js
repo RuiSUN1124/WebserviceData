@@ -12,43 +12,49 @@ var CarFlow = require('./models/Flow.js');
 var server = net.createServer();
 var num_socket = 0;
 var num_packet = 0;
-var socket_length = 0;
+var data_length = 0;
+var num_correct = false;
 server.on('connection', (socket) => {
     num_socket = num_socket + 1;
     console.log('Good connection ' + num_socket + ' time');
     // if lose data, despite of data length, how could we know the correction. 
-
+    //socket.bufferSize = 2000; 
     socket.on('data', (data) => {
         socket_length = socket.bytesRead;
-        if ((socket_length - 15) % 59 != 0) {
-            console.log('Received ', socket_length, ' bytes data');
+        var data_length = data.length;
+        if ((data_length - 15) % 59 != 0) {
+            console.log('Received ', data_length, ' bytes data');
             console.log('Number of array byte incorrect, please resend!');
+            num_correct = false;
         } else {
-            console.log('Received ', socket_length, ' bytes data successfully');
-            num_packet = (socket_length - 15) / 59;
+            console.log('Received ', data_length, ' bytes data successfully');
+            num_packet = (data_length - 15) / 59;
+            num_correct = true;
         }
         //var ManufacturerCode	    
-        var manu_code = data[socket_length - 2];
+        var manu_code = data[data_length - 2];
         console.log('-ManufacturerCode: ' + manu_code);
 
         //var CheckCode
-        var check_code = data[socket_length - 1];
+        var check_code = data[data_length - 1];
         console.log('-CheckCode: ' + check_code);
 
         //check 
         var check_correct = data[13];
-        for (var i = 14; i <= socket_length - 3; i++) {
+        for (var i = 14; i <= data_length - 3; i++) {
             check_correct ^= data[i];
         }
 
         console.log('Check result: ', check_correct);
-        console.log('Check succeed: ', (check_code == check_correct) ? 'Yes' : 'No');
+        console.log('Check succeed: ', (check_code == check_correct) ? 'Yes' : 'No, resend please!');
 
         //test bytes stream,check every byte
-        data.forEach((d, index) => {
-            console.log(index + '\'s value is ' + d);
-        });
-        if (check_code == check_correct) {
+
+        if ((check_code == check_correct) && num_correct) {
+
+            data.forEach((d, index) => {
+                console.log(index + '\'s value is ' + d);
+            });
             //Packet data
             for (var k = 0; k < num_packet; k++) {
                 //var CrossID
@@ -56,6 +62,19 @@ server.on('connection', (socket) => {
                 for (var i = 0; i < 8; i++) {
                     str_crossid = str_crossid + String.fromCharCode(data[i]);
                 }
+                var buf_crossid = new Buffer(8);
+                for (var i = 0; i <= 7; i++) {
+                    buf_crossid[i] = data[i];
+                }
+
+                var buf_packet_type = new Buffer(1);
+                buf_packet_type[0] = data[8];
+
+                var buf_packetInfo = new Buffer(4);
+                for (var i = 0; i <= 3; i++) {
+                    buf_packetInfo[i] = data[i + 9];
+                }
+
                 console.log('========================  Header  ===========================');
                 console.log('-Cross ID: ', str_crossid);
 
@@ -199,12 +218,12 @@ server.on('connection', (socket) => {
                                 Volume: buf_v.readUInt16LE(0),
                                 AvgOccupancy: buf_ave_occup.readUInt16LE(0),
                                 AvgHeadTime: buf_ave_header.readUInt16LE(0),
-                                AvgLength: buf_avg_l.readFloatLE(0),
-                                AvgSpeed: buf_avg_s.readFloatLE(0),
+                                AvgLength: buf_avg_l.readFloatLE(0).toFixed(2),
+                                AvgSpeed: buf_avg_s.readFloatLE(0).toFixed(2),
                                 Saturation: saturation,
                                 Density: buf_den.readUInt16LE(0),
                                 Pcu: buf_pcu.readUInt16LE(0),
-                                AveQueueLength: buf_ave_ql.readFloatLE(0),
+                                AveQueueLength: buf_ave_ql.readFloatLE(0).toFixed(2),
                                 Volume1: buf_v1.readUInt16LE(0),
                                 Volume2: buf_v2.readUInt16LE(0),
                                 Volume3: buf_v3.readUInt16LE(0),
@@ -217,11 +236,24 @@ server.on('connection', (socket) => {
                 //因为是异步，所以save succeed出现在check succeed后面，Num_packet就是用来确定一个帧发送多个内容相同的包，
                 //收到的是多个不同的包而不是一个包收多次。 这么做是测试客户端的缺陷（发多包只能内容一样的）。
                 CarFlow.save(packet_json, (err) => {
-                    if (err) { console.log('save failed') } else {
+                    if (err) {
+                        console.log('save failed')
+                        
+                    } else {
                         console.log('save succeed');
+                        
+                        // socket.resume();
                     }
                 });
             }
+            buf_packetInfo.writeUIntLE(0x2, 0, 4);
+            var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
+            // socket.pause();
+            socket.write(res_sec);
+        } else {
+            buf_packetInfo.writeUIntLE(0x3, 0, 4);
+            var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
+            socket.write(res_sec);
         }
     });
 });

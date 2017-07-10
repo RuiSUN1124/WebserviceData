@@ -15,7 +15,7 @@ var FlowSchema = new Schema({
                 LaneNo: String,
                 Volume: Number,
                 AvgOccupancy: Number,
-                AvgHeadTime: Number,
+                AvgHeadTime: Number,            
                 AvgLength: Number,
                 AvgSpeed: Number,
                 Saturation: Number,
@@ -31,6 +31,7 @@ var FlowSchema = new Schema({
         }
     }   
 });
+FlowSchema.index({"CrossTrafficData.DateTime":1,"CrossTrafficData.DataList.Data.LaneNo":1},{unique: true});
 //Establish a model who decide the name of the collection, for example, 'flowCar' ------> flowcars in mongo db
 var FlowModel = mongodb.mongoose.model('flowCar',FlowSchema);
 
@@ -81,7 +82,7 @@ FlowOp.prototype.findByCross = function(id,callback){
 
 //Retrieve data in a certain period
 FlowOp.prototype.findByPeriod = function(start,end,callback){
-    FlowModel.find({'CrossTrafficDate.DateTime':{"$gt":start,"$lte":end}},'-_id -__v',(err,data_p)=>{
+    FlowModel.find({'CrossTrafficData.DateTime':{"$gt":start,"$lte":end}},'-_id -__v',(err,data_p)=>{
         var data_p_json= JSON.stringify({data_p});
         callback(err,data_p_json);
     });

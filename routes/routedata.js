@@ -46,7 +46,6 @@ router.get('/cross/:id', (req, res) => {
         // console.log(obj);
         var data_xml = jsontoxml(obj);
         res.set('Content-Type', 'text/xml');
-
         var d = '<?xml version="1.0" encoding="utf-8"?>';
         res.send(d + data_xml);
     });
@@ -56,7 +55,6 @@ router.get('/start=:timestart&end=:timeend', (req, res) => {
     CarFlow.findByPeriod(req.params.timestart, req.params.timeend, (err, obj) => {
         var data_xml = jsontoxml(obj);
         res.set('Content-Type', 'text/xml');
-
         var d = '<?xml version="1.0" encoding="utf-8"?>';
         res.send(d + data_xml);
     });
@@ -66,7 +64,6 @@ router.get('/cross/:id/start=:timestart&end=:timeend', (req, res) => {
     CarFlow.findByCrossByPeriod(req.params.id, req.params.timestart, req.params.timeend, (err, obj) => {
         var data_xml = jsontoxml(obj);
         res.set('Content-Type', 'text/xml');
-
         var d = '<?xml version="1.0" encoding="utf-8"?>';
         res.send(d + data_xml);
     });
