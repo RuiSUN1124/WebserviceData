@@ -246,15 +246,16 @@ server.on('connection', (socket) => {
                     }
                 });
             }
-            buf_packetInfo.writeUIntLE(0x2, 0, 4);
-            var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
-            // socket.pause();
-            socket.write(res_sec);
-        } else {
-            buf_packetInfo.writeUIntLE(0x3, 0, 4);
-            var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
-            socket.write(res_sec);
-        }
+            // buf_packetInfo.writeUIntLE(0x2, 0, 4);
+            // var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
+            // // socket.pause();
+            // socket.write(res_sec);
+        } 
+        //else {
+            // buf_packetInfo.writeUIntLE(0x3, 0, 4);
+            // var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
+            // socket.write(res_sec);
+        //}
     });
 });
 server.listen(4001);

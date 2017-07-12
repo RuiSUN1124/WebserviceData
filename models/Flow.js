@@ -79,6 +79,13 @@ FlowOp.prototype.findByCross = function(id,callback){
         callback(err,data_id_json);    
     });
 }
+//Retrieve data by CrossID and LaneNo
+FlowOp.prototype.findByCrossByLaneNo = function(id,no,callback){
+    FlowModel.find({'CrossTrafficData.CrossID':id, 'CrossTrafficData.DataList.Data.LaneNo':no},(err,data_id_no)=>{
+        var data_id_no_json = JSON.stringify({data_id_no});
+        callback(err,data_id_no_json);
+    });
+}
 
 //Retrieve data in a certain period
 FlowOp.prototype.findByPeriod = function(start,end,callback){
@@ -112,6 +119,7 @@ FlowOp.prototype.findByCrossNear3min = function(id,callback){
         callback(err,data_id_3min_json); 
     });
 }
+
 
 //in this way, return not a class but object.
 //if we need return a class, should change the code as:  modules.exports = FlowOp
