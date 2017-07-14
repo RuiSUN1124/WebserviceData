@@ -31,7 +31,7 @@ var FlowSchema = new Schema({
         }
     }   
 });
-FlowSchema.index({"CrossTrafficData.DateTime":1,"CrossTrafficData.DataList.Data.LaneNo":1},{unique: true});
+//FlowSchema.index({"CrossTrafficData.DateTime":1,"CrossTrafficData.DataList.Data.LaneNo":1},{unique: true});
 //Establish a model who decide the name of the collection, for example, 'flowCar' ------> flowcars in mongo db
 var FlowModel = mongodb.mongoose.model('flowCar',FlowSchema);
 
