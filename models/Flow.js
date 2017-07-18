@@ -31,7 +31,7 @@ var FlowSchema = new Schema({
         }
     }   
 });
-//FlowSchema.index({"CrossTrafficData.DateTime":1,"CrossTrafficData.DataList.Data.LaneNo":1},{unique: true});
+FlowSchema.index({"CrossTrafficData.DateTime":-1,"CrossTrafficData.DataList.Data.LaneNo":1},{unique: true});
 //Establish a model who decide the name of the collection, for example, 'flowCar' ------> flowcars in mongo db
 var FlowModel = mongodb.mongoose.model('flowCar',FlowSchema);
 
@@ -107,8 +107,8 @@ FlowOp.prototype.findByCrossByPeriod = function(id,start,end,callback){
 FlowOp.prototype.findByCrossNear3min = function(id,callback){
     var now = moment().startOf('seconds');
     var now_back_3min = moment(now).subtract(3,'minutes');
-    now = now.add(2,'hours');//france 
-    //now = now.add(8,'hours');//china     
+    //now = now.add(2,'hours');//france 
+    now = now.add(8,'hours');//china     
     now_back_3min = now_back_3min.add(2,'hours');
     var now_str = ISO2String(now);
     var now_back_3min_str = ISO2String(now_back_3min);
@@ -119,7 +119,22 @@ FlowOp.prototype.findByCrossNear3min = function(id,callback){
         callback(err,data_id_3min_json); 
     });
 }
+//Retrieve last n documents
+FlowOp.prototype.findLastN  = function(n,callback){
+    FlowModel.find({},(err,data_n)=>{
+        var data_n_json = JSON.stringify({data_n});
+        callback(err,data_n_json);
+    }).sort({_id:-1}).limit(parseInt(n));
+}
 
+
+//Retrieve last n documents
+FlowOp.prototype.findByCrossByLaneLastN  = function(id,no,n,callback){
+    FlowModel.find({'CrossTrafficData.CrossID':id, 'CrossTrafficData.DataList.Data.LaneNo':no},'-_id -__v',(err,data_id_no_n)=>{
+        var data_id_no_n_json = JSON.stringify({data_id_no_n});
+        callback(err,data_id_no_n_json);
+    }).sort({"CrossTrafficData.DateTime":-1}).limit(parseInt(n));
+}
 
 //in this way, return not a class but object.
 //if we need return a class, should change the code as:  modules.exports = FlowOp

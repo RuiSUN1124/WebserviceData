@@ -9,6 +9,7 @@ var CarFlow = require('../models/Flow.js');
 var EasyXml = require('easyxml');
 
 router.use((req, res, next) => {
+    console.log('Source IP: '+req.ip+' at '+ new Date().toString());
     next();
 });
 
@@ -88,5 +89,22 @@ router.get('/cross/:id/last3min', (req, res) => {
     });
 });
 
+router.get('/last/:n',(req,res) => {
+    CarFlow.findLastN(req.params.n,(err,obj)=>{
+        var data_xml = jsontoxml(obj);
+        res.set('Content-Type', 'text/xml');
+        var d = '<?xml version="1.0" encoding="utf-8"?>';
+        res.send(d + data_xml);
+    });
+});
 
+
+router.get('/cross/:id/lane/:no/last/:n',(req,res) => {
+    CarFlow.findByCrossByLaneLastN(req.params.id,req.params.no,req.params.n,(err,obj)=>{
+        var data_xml = jsontoxml(obj);
+        res.set('Content-Type', 'text/xml');
+        var d = '<?xml version="1.0" encoding="utf-8"?>';
+        res.send(d + data_xml);
+    });
+});
 module.exports = router;
