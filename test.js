@@ -24,7 +24,7 @@ server.on('error', (err) => {
 });
 server.on('connection', (socket) => {
     //socket.setNoDelay(true);
-    num_socket++;
+    num_socket++
     console.log('New socket connected: ' + num_socket + '\'s socket');
     socket.on('error', function (exc) {
         console.log("ignoring exception: " + exc+' at' + new Date().toString());
@@ -41,11 +41,11 @@ server.on('connection', (socket) => {
             length_will_rcv = data_rcv[9] * 59 + 15;
             console.log("Supposed packet length is " + length_will_rcv);
             // DateTime
-           // var suppose_date_time = new String();
-           // for (var i = 19; i < 38; i++) {
-             //   suppose_date_time = suppose_date_time + String.fromCharCode(data[i]);
-           // }
-           // console.log(suppose_date_time);
+            // var suppose_date_time = new String();
+            // for (var i = 19; i < 38; i++) {
+            //     suppose_date_time = suppose_date_time + String.fromCharCode(data[i]);
+            // }
+            // console.log(suppose_date_time);
             
             length_is_rcv = 0;
             length_is_rcv = data_rcv.length;
@@ -53,7 +53,8 @@ server.on('connection', (socket) => {
             data = Buffer.concat([data, data_rcv]);
             if (length_is_rcv == length_will_rcv) {
                 console.log("Already a complete packet, store process...");
-                store_data(data, socket);
+                var data_buf = new Buffer(data);
+                store_data(data_buf);
             }
 
         } else {
@@ -69,72 +70,20 @@ server.on('connection', (socket) => {
             }
             if (data.length == length_will_rcv) {
                 console.log("receive a packet completely! store process...");
-                store_data(data, socket);
+                  var data_buf = new Buffer(data);
+                store_data(data_buf, (is_suc,response)=>{
+                    if(is_suc == 1)socket.write(response);
+                });
             }
         }
     });
 });
 
 
-
-// if (is_body) {
-//     data = Buffer.concat([data, data_rcv]);
-//     if (data.length > 2000) {
-//         is_body = false;
-//         data.fill();
-//         length_is_rcv = 0;
-//         length_will_rcv = 0;
-//     }
-//     console.log(data.length);
-//     if (data.length == length_will_rcv) {
-//         //data[13] = 66;
-//         // data.forEach((d, index) => {
-//         //     console.log(index + '\'s value is ' + d.toString(16));
-//         // });
-//         console.log("receive a packet completely! store process...");
-
-//         store_data(data);
-
-//         is_body = false;
-//         data.fill();
-//     }
-// } else {
-//     console.log("wait");
-//     if (data_rcv.length > 2000) { console.log("data_rcv too big, waiting new data_rcv!"); } else {
-//         var is_header = true;
-//         for (var i = 0; i <= 7; i++) {
-//             if (data_rcv[i] >= 58 || data_rcv[i] <= 47) is_header = false;
-//         }
-//         if (is_header) {
-//             is_body = true;
-//             console.log("find correct header!");
-//             length_will_rcv = data_rcv[9] * 59 + 15;
-//             console.log("packet length is " + length_will_rcv);
-//             length_is_rcv += data_rcv.length;
-//             data = new Buffer(0);
-//             data = Buffer.concat([data, data_rcv]);
-//             if (length_is_rcv == length_will_rcv) {
-//                 console.log("Already a complete packet, store process...");
-//                 store_data(data);
-
-//                 is_body = false;
-//                 data.fill();
-//                 length_is_rcv = 0;
-//                 length_will_rcv = 0;
-//             }
-//         }
-//         //    data_rcv.forEach((d, index) => {
-//         //         console.log(index + '\'s value is ' + d);
-//         //     });
-//     }
-
-// }
-
-
 server.listen(4001);
 console.log('Server started,listening port 4001:...');
 
-var store_data = function (data, socket) {
+var store_data = function (data) {
     var data_length = data.length;
     if ((data_length - 15) % 59 != 0) {
         console.log('Received ', data_length, ' bytes data');
@@ -345,11 +294,10 @@ var store_data = function (data, socket) {
                     }
                 }
             };
-            //因为是异步，所以save succeed出现在check succeed后面，Num_packet就是用来确定一个帧发送多个内容相同的包，
-            //收到的是多个不同的包而不是一个包收多次。 这么做是测试客户端的缺陷（发多包只能内容一样的）。
             CarFlow.save(packet_json, (err) => {
                 if (err) {
                     //  console.log('save failed')
+                    console.log(err);
                     counter_fai++;
                 } else {
                     //console.log('save succeed');
@@ -362,7 +310,9 @@ var store_data = function (data, socket) {
                     if (counter_suc == num_packet) {
                         buf_packetInfo.writeUIntLE(0x2, 0, 4);
                         var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
-                        socket.write(res_sec);
+                        //socket.write(res_sec);
+                       
+                    }else{
                     }
                     counter_fai = 0;
                     counter_suc = 0;
@@ -371,10 +321,5 @@ var store_data = function (data, socket) {
                 }
             });
         }
-        // buf_packetInfo.writeUIntLE(0x2, 0, 4);
-        // var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
-        // // socket.pause();
-        // socket.write(res_sec);
     }
 }
-

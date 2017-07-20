@@ -79,6 +79,15 @@ router.get('/cross/:id/start=:timestart&end=:timeend', (req, res) => {
     });
 });
 
+router.get('/cross/:id/lane/lanestart=:lanest&laneend=:laneen/start=:timestart&end=:timeend', (req, res) => {
+    CarFlow.findByCrossByLaneRangeByPeriod(req.params.id, req.params.lanest, req.params.laneen, req.params.timestart, req.params.timeend, (err, obj) => {
+        var data_xml = jsontoxml(obj);
+        res.set('Content-Type', 'text/xml');
+        var d = '<?xml version="1.0" encoding="utf-8"?>';
+        res.send(d + data_xml);
+    });
+});
+
 router.get('/cross/:id/last3min', (req, res) => {
     CarFlow.findByCrossNear3min(req.params.id, (err, obj) => {
 

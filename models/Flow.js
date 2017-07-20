@@ -95,6 +95,9 @@ FlowOp.prototype.findByPeriod = function(start,end,callback){
     });
 } 
 
+
+
+
 //Retrieve data by CrossID in a certain period
 //example: http://localhost:4002/api/method=get&appkey=436etaq52e57a3cd028ab56b&seckey=sec-mj12Slu12w1Xs1er8ZzmGZqw5qrpFmqw25jHULr13eUZCswA/cross/87654321/start=2017-07-01 07:39:00&end=2017-07-01 07:39:15
 FlowOp.prototype.findByCrossByPeriod = function(id,start,end,callback){
@@ -103,6 +106,19 @@ FlowOp.prototype.findByCrossByPeriod = function(id,start,end,callback){
         callback(err,data_id_p_json);  
     });
 }
+
+
+
+//Retrieve data in a certain period in a certain range of lanes
+FlowOp.prototype.findByCrossByLaneRangeByPeriod = function(id,no_start,no_end,start,end,callback){
+    FlowModel.find({'CrossTrafficData.CrossID':id,'CrossTrafficData.DataList.Data.LaneNo':{"$gte":no_start,"$lte":no_end},'CrossTrafficData.DateTime': {"$gt": start, "$lte": end}},'-_id -__v',(err,data_id_range_p)=>{
+        var data_id_range_p_json = JSON.stringify({data_id_range_p});
+        callback(err,data_id_range_p_json);
+    });
+}
+
+
+
 //Retrieve data by CrossID for last 3 minutes
 FlowOp.prototype.findByCrossNear3min = function(id,callback){
     var now = moment().startOf('seconds');
