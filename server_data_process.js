@@ -27,7 +27,7 @@ server.on('connection', (socket) => {
     num_socket++;
     console.log('New socket connected: ' + num_socket + '\'s socket');
     socket.on('error', function (exc) {
-        console.log("ignoring exception: " + exc+' at' + new Date().toString());
+        console.log("ignoring exception: " + exc + ' at' + new Date().toString());
     });
     socket.on('data', (data_rcv) => {
         var is_header = true;
@@ -41,12 +41,12 @@ server.on('connection', (socket) => {
             length_will_rcv = data_rcv[9] * 59 + 15;
             console.log("Supposed packet length is " + length_will_rcv);
             // DateTime
-           // var suppose_date_time = new String();
-           // for (var i = 19; i < 38; i++) {
-             //   suppose_date_time = suppose_date_time + String.fromCharCode(data[i]);
-           // }
-           // console.log(suppose_date_time);
-            
+            // var suppose_date_time = new String();
+            // for (var i = 19; i < 38; i++) {
+            //   suppose_date_time = suppose_date_time + String.fromCharCode(data[i]);
+            // }
+            // console.log(suppose_date_time);
+
             length_is_rcv = 0;
             length_is_rcv = data_rcv.length;
             data = new Buffer(0);
@@ -62,9 +62,9 @@ server.on('connection', (socket) => {
             }
             data = Buffer.concat([data, data_rcv]);
             if (data.length > 2000) {
-             //   data = new Buffer(0);
-              //  length_is_rcv = 0;
-              //  length_will_rcv = 0;
+                //   data = new Buffer(0);
+                //  length_is_rcv = 0;
+                //  length_will_rcv = 0;
                 console.log("Beyond the max data! Reset and wait new header...");
             }
             if (data.length == length_will_rcv) {
@@ -74,62 +74,6 @@ server.on('connection', (socket) => {
         }
     });
 });
-
-
-
-// if (is_body) {
-//     data = Buffer.concat([data, data_rcv]);
-//     if (data.length > 2000) {
-//         is_body = false;
-//         data.fill();
-//         length_is_rcv = 0;
-//         length_will_rcv = 0;
-//     }
-//     console.log(data.length);
-//     if (data.length == length_will_rcv) {
-//         //data[13] = 66;
-//         // data.forEach((d, index) => {
-//         //     console.log(index + '\'s value is ' + d.toString(16));
-//         // });
-//         console.log("receive a packet completely! store process...");
-
-//         store_data(data);
-
-//         is_body = false;
-//         data.fill();
-//     }
-// } else {
-//     console.log("wait");
-//     if (data_rcv.length > 2000) { console.log("data_rcv too big, waiting new data_rcv!"); } else {
-//         var is_header = true;
-//         for (var i = 0; i <= 7; i++) {
-//             if (data_rcv[i] >= 58 || data_rcv[i] <= 47) is_header = false;
-//         }
-//         if (is_header) {
-//             is_body = true;
-//             console.log("find correct header!");
-//             length_will_rcv = data_rcv[9] * 59 + 15;
-//             console.log("packet length is " + length_will_rcv);
-//             length_is_rcv += data_rcv.length;
-//             data = new Buffer(0);
-//             data = Buffer.concat([data, data_rcv]);
-//             if (length_is_rcv == length_will_rcv) {
-//                 console.log("Already a complete packet, store process...");
-//                 store_data(data);
-
-//                 is_body = false;
-//                 data.fill();
-//                 length_is_rcv = 0;
-//                 length_will_rcv = 0;
-//             }
-//         }
-//         //    data_rcv.forEach((d, index) => {
-//         //         console.log(index + '\'s value is ' + d);
-//         //     });
-//     }
-
-// }
-
 
 server.listen(4001);
 console.log('Server started,listening port 4001:...');
@@ -145,6 +89,7 @@ var store_data = function (data, socket) {
         num_packet = (data_length - 15) / 59;
         num_correct = true;
     }
+
     //var ManufacturerCode	    
     var manu_code = data[data_length - 2];
     //console.log('-ManufacturerCode: ' + manu_code);
@@ -162,9 +107,35 @@ var store_data = function (data, socket) {
     //console.log('Check result: ', check_correct);
     console.log('Check succeed: ', (check_code == check_correct) ? 'Yes' : 'No, resend please!');
 
+      
+    //verifier if the data is for asychronous time
+    if (data[8] == 6) {
+        console.log(data[8]);
+        var buf_packetInfo = new Buffer(4);
+        for (var i = 0; i <= 3; i++) {
+            buf_packetInfo[i] = data[i + 9];
+        }
+        var buf_crossid = new Buffer(8);
+        for (var i = 0; i <= 7; i++) {
+            buf_crossid[i] = data[i];
+        }
+        var buf_packet_type = new Buffer(1);
+        buf_packet_type[0] = data[8];
+
+        var buf_time = new Buffer(4);
+
+        buf_packetInfo.writeUIntLE(0x2, 0, 4);
+        var timestamp = Math.round(new Date().getTime() / 1000)
+        var buf_tt = new Buffer(4);
+        buf_tt.writeInt32BE(timestamp, 0, 4);
+        console.log(timestamp);
+        var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo, buf_tt]);
+        socket.write(res_sec);
+    }
+
     //test bytes stream,check every byte
 
-    if ((check_code == check_correct) && num_correct) {
+    if ((check_code == check_correct) && num_correct && (data[8] != 6)) {
 
         // data.forEach((d, index) => {
         //     console.log(index + '\'s value is ' + d);
@@ -371,10 +342,9 @@ var store_data = function (data, socket) {
                 }
             });
         }
-        // buf_packetInfo.writeUIntLE(0x2, 0, 4);
-        // var res_sec = Buffer.concat([buf_crossid, buf_packet_type, buf_packetInfo]);
-        // // socket.pause();
-        // socket.write(res_sec);
+
     }
 }
+
+
 
